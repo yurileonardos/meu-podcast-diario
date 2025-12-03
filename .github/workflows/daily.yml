@@ -1,0 +1,35 @@
+name: Podcast Diario
+on:
+  schedule:
+    - cron: '0 10 * * *' # Roda às 10:00 UTC (07:00 em Goiânia)
+  workflow_dispatch: # Permite rodar manualmente para testar
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Podcast Generator
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python main.py
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name 'Podcast Bot'
+          git config --global user.email 'bot@noreply.github.com'
+          git add .
+          git commit -m "Novo episódio diário" || exit 0
+          git push
