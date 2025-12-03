@@ -8,7 +8,7 @@ import pytz
 from xml.sax.saxutils import escape
 
 # --- CONFIGURAÇÕES DO USUÁRIO ---
-GITHUB_USER = "yurileonardos"  # <--- COLOQUE SEU USUÁRIO GITHUB AQUI
+GITHUB_USER = "yurileonardos"  # <--- SEU USUÁRIO AQUI
 REPO_NAME = "meu-podcast-diario"
 BASE_URL = f"https://{GITHUB_USER}.github.io/{REPO_NAME}"
 
@@ -56,19 +56,32 @@ def get_news_summary():
             except: continue
     return texto_final
 
-# --- CÉREBRO COM CORREÇÃO DE MODELO ---
+# --- CÉREBRO COM AUTO-SELEÇÃO DE MODELO ---
 def make_script(news_text):
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         print("ERRO CRÍTICO: Chave API não encontrada!")
         return "Erro técnico: Chave de API não encontrada."
     
-    print(f"Chave detectada.") 
+    genai.configure(api_key=api_key)
+
+    # --- NOVIDADE: AUTO-SELETOR ---
+    model_name = 'gemini-pro' # Tentativa padrão
+    try:
+        print("Consultando modelos disponíveis na sua conta...")
+        for m in genai.list_models():
+            if 'generateContent' in m.supported_generation_methods:
+                if 'gemini' in m.name:
+                    print(f"Modelo encontrado e compatível: {m.name}")
+                    model_name = m.name
+                    break # Pega o primeiro que funcionar (geralmente models/gemini-pro)
+    except Exception as e:
+        print(f"Aviso na listagem de modelos: {e}")
+
+    print(f"Tentando gerar roteiro com o modelo: {model_name}")
 
     try:
-        genai.configure(api_key=api_key)
-        # --- AQUI ESTAVA O ERRO, MUDAMOS PARA O MODELO PADRÃO ---
-        model = genai.GenerativeModel('gemini-pro') 
+        model = genai.GenerativeModel(model_name)
         
         data_hoje = datetime.now(pytz.timezone('America/Sao_Paulo')).strftime('%d de %B')
         
@@ -82,18 +95,17 @@ def make_script(news_text):
         {news_text}
         """
         
-        print("Enviando para a IA...")
         response = model.generate_content(prompt)
         
         if response.text:
-            print("Sucesso!")
+            print("Sucesso na geração de texto!")
             return response.text
         else:
-            return "Erro técnico: A IA ficou muda."
+            return "Erro técnico: A IA gerou um texto vazio."
             
     except Exception as e:
-        print(f"ERRO API: {e}")
-        return f"Ocorreu um erro técnico na conexão: {str(e)[:100]}"
+        print(f"ERRO API FINAL: {e}")
+        return f"Ocorreu um erro técnico: {str(e)[:100]}"
 
 async def gen_audio(text, filename):
     communicate = edge_tts.Communicate(text, "pt-BR-AntonioNeural") 
