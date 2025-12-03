@@ -56,19 +56,19 @@ def get_news_summary():
             except: continue
     return texto_final
 
-# --- CÉREBRO COM DIAGNÓSTICO DE ERRO ---
+# --- CÉREBRO COM CORREÇÃO DE MODELO ---
 def make_script(news_text):
-    # 1. Verifica se a chave existe
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        print("ERRO CRÍTICO: A variável GEMINI_API_KEY não foi encontrada nas Secrets!")
+        print("ERRO CRÍTICO: Chave API não encontrada!")
         return "Erro técnico: Chave de API não encontrada."
     
-    print(f"Chave de API detectada (início): {api_key[:4]}...") # Debug seguro
+    print(f"Chave detectada.") 
 
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # --- AQUI ESTAVA O ERRO, MUDAMOS PARA O MODELO PADRÃO ---
+        model = genai.GenerativeModel('gemini-pro') 
         
         data_hoje = datetime.now(pytz.timezone('America/Sao_Paulo')).strftime('%d de %B')
         
@@ -82,20 +82,18 @@ def make_script(news_text):
         {news_text}
         """
         
-        print("Enviando dados para o Google Gemini...")
+        print("Enviando para a IA...")
         response = model.generate_content(prompt)
         
         if response.text:
-            print("Resposta da IA recebida com sucesso!")
+            print("Sucesso!")
             return response.text
         else:
-            print("ERRO: O Google Gemini devolveu um texto vazio.")
             return "Erro técnico: A IA ficou muda."
             
     except Exception as e:
-        print(f"ERRO DETALHADO DA API DO GOOGLE: {e}")
-        # Retorna o erro falado para você ouvir no áudio o que aconteceu
-        return f"Ocorreu um erro técnico na conexão com a inteligência artificial. O erro foi: {str(e)[:50]}"
+        print(f"ERRO API: {e}")
+        return f"Ocorreu um erro técnico na conexão: {str(e)[:100]}"
 
 async def gen_audio(text, filename):
     communicate = edge_tts.Communicate(text, "pt-BR-AntonioNeural") 
@@ -106,7 +104,6 @@ def update_rss(audio_filename, title):
     audio_url = f"{BASE_URL}/{audio_filename}"
     now = datetime.now(pytz.timezone('America/Sao_Paulo'))
     
-    # Limpa título para evitar erro XML
     safe_title = escape(title).replace("&", "e") 
     
     rss_item = f"""
@@ -135,7 +132,6 @@ def update_rss(audio_filename, title):
     else:
         with open(rss_file, 'r', encoding='utf-8') as f:
             content = f.read()
-        # Se o arquivo estiver corrompido, refaz
         if "xmlParseEntityRef" in content: 
              with open(rss_file, 'w', encoding='utf-8') as f:
                 f.write(header + rss_item + "\n  </channel>\n</rss>")
