@@ -5,10 +5,10 @@ import asyncio
 import edge_tts
 from datetime import datetime
 import pytz
-from xml.sax.saxutils import escape # Nova ferramenta de segurança
+from xml.sax.saxutils import escape
 
 # --- CONFIGURAÇÕES DO USUÁRIO ---
-GITHUB_USER = "yurileonardos"  # <--- COLOQUE SEU USUÁRIO GITHUB AQUI NOVAMENTE
+GITHUB_USER = "yurileonardos"  # <--- COLOQUE SEU USUÁRIO GITHUB AQUI
 REPO_NAME = "meu-podcast-diario"
 BASE_URL = f"https://{GITHUB_USER}.github.io/{REPO_NAME}"
 
@@ -56,37 +56,57 @@ def get_news_summary():
             except: continue
     return texto_final
 
+# --- CÉREBRO COM DIAGNÓSTICO DE ERRO ---
 def make_script(news_text):
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    data_hoje = datetime.now(pytz.timezone('America/Sao_Paulo')).strftime('%d de %B')
+    # 1. Verifica se a chave existe
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        print("ERRO CRÍTICO: A variável GEMINI_API_KEY não foi encontrada nas Secrets!")
+        return "Erro técnico: Chave de API não encontrada."
     
-    prompt = f"""
-    Você é o âncora de um podcast jornalístico.
-    Data: {data_hoje}.
-    Resuma as notícias abaixo de forma completa e séria.
-    Foco: Goiás, Brasil e Mundo.
-    Não use caracteres especiais complexos.
-    
-    Notícias:
-    {news_text}
-    """
+    print(f"Chave de API detectada (início): {api_key[:4]}...") # Debug seguro
+
     try:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        data_hoje = datetime.now(pytz.timezone('America/Sao_Paulo')).strftime('%d de %B')
+        
+        prompt = f"""
+        Você é o âncora de um podcast jornalístico.
+        Data: {data_hoje}.
+        Resuma as notícias abaixo de forma completa e séria para um podcast.
+        Foco: Goiás, Brasil e Mundo.
+        
+        Notícias:
+        {news_text}
+        """
+        
+        print("Enviando dados para o Google Gemini...")
         response = model.generate_content(prompt)
-        return response.text
-    except: return "Erro técnico. Voltamos amanhã."
+        
+        if response.text:
+            print("Resposta da IA recebida com sucesso!")
+            return response.text
+        else:
+            print("ERRO: O Google Gemini devolveu um texto vazio.")
+            return "Erro técnico: A IA ficou muda."
+            
+    except Exception as e:
+        print(f"ERRO DETALHADO DA API DO GOOGLE: {e}")
+        # Retorna o erro falado para você ouvir no áudio o que aconteceu
+        return f"Ocorreu um erro técnico na conexão com a inteligência artificial. O erro foi: {str(e)[:50]}"
 
 async def gen_audio(text, filename):
     communicate = edge_tts.Communicate(text, "pt-BR-AntonioNeural") 
     await communicate.save(filename)
 
-# --- A CORREÇÃO ESTÁ AQUI (Função Blindada) ---
 def update_rss(audio_filename, title):
     rss_file = "feed.xml"
     audio_url = f"{BASE_URL}/{audio_filename}"
     now = datetime.now(pytz.timezone('America/Sao_Paulo'))
     
-    # Limpa caracteres perigosos do título
+    # Limpa título para evitar erro XML
     safe_title = escape(title).replace("&", "e") 
     
     rss_item = f"""
@@ -99,7 +119,6 @@ def update_rss(audio_filename, title):
     </item>
     """
     
-    # Cabeçalho corrigido: "Goiás e Brasil" em vez de "&"
     header = f"""<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
   <channel>
@@ -116,8 +135,8 @@ def update_rss(audio_filename, title):
     else:
         with open(rss_file, 'r', encoding='utf-8') as f:
             content = f.read()
-        # Se o arquivo antigo estiver corrompido ou com erro, recria do zero
-        if "xmlParseEntityRef" in content or "& " in content: 
+        # Se o arquivo estiver corrompido, refaz
+        if "xmlParseEntityRef" in content: 
              with open(rss_file, 'w', encoding='utf-8') as f:
                 f.write(header + rss_item + "\n  </channel>\n</rss>")
         else:
