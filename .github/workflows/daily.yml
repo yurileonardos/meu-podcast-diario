@@ -1,8 +1,8 @@
 name: Podcast Diario
 on:
   schedule:
-    - cron: '0 10 * * *' # Roda às 10:00 UTC (07:00 em Goiânia)
-  workflow_dispatch: # Permite rodar manualmente para testar
+    - cron: '0 10 * * *' # Roda às 10:00 UTC (07:00 Brasil)
+  workflow_dispatch: # Permite rodar manualmente
 
 jobs:
   build:
@@ -16,10 +16,11 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.11' # ATUALIZADO PARA VERSÃO MAIS NOVA
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        # O comando --upgrade garante que pegue a versão mais recente que corrige o erro 401
+        run: pip install --upgrade -r requirements.txt
 
       - name: Run Podcast Generator
         env:
