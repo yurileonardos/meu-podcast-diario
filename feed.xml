@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
   <channel>
-    <title>Resumo Diario Personalizado</title>
-    <description>Goiás, Brasil, Mundo e Esportes Selecionados.</description>
+    <title>Resumo Diario do Yuri</title>
+    <description>Notícias personalizadas.</description>
     <link>https://yurileonardos.github.io/meu-podcast-diario</link>
     <language>pt-br</language>
     <itunes:image href="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Flag_of_Brazil.svg/640px-Flag_of_Brazil.svg.png"/>
 
     <item>
       <title>Resumo 03/12</title>
-      <description>Notícias de Goiás, Brasil e Mundo.</description>
+      <description>Notícias para Yuri: Vila, Cruzeiro, Goiás e Mundo.</description>
       <enclosure url="https://yurileonardos.github.io/meu-podcast-diario/podcast_20251203.mp3" type="audio/mpeg" />
       <guid isPermaLink="true">https://yurileonardos.github.io/meu-podcast-diario/podcast_20251203.mp3</guid>
-      <pubDate>Wed, 03 Dec 2025 13:01:01 -0300</pubDate>
+      <pubDate>Wed, 03 Dec 2025 14:21:07 -0300</pubDate>
     </item>
     
   </channel>
