@@ -12,11 +12,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Baixa histórico completo
+
+      - name: Update Code Base
+        run: git pull origin main || echo "Nada para puxar"
 
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.11' # Versão moderna
 
       - name: Install dependencies
         run: pip install --upgrade -r requirements.txt
@@ -26,12 +31,11 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python main.py
 
-      - name: Commit and Push
+      - name: Commit and Push (FORCE)
         run: |
           git config --global user.name 'Podcast Bot'
           git config --global user.email 'bot@noreply.github.com'
           git add .
           git commit -m "Novo episódio diário" || exit 0
-          # --- A CORREÇÃO ESTÁ AQUI EMBAIXO ---
-          git pull --rebase origin main
-          git push
+          # O segredo: -f obriga a atualização, evitando erros de conflito
+          git push -f origin main
