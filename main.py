@@ -9,54 +9,74 @@ from xml.sax.saxutils import escape
 import re
 
 # --- CONFIGURAÇÕES DO USUÁRIO ---
-GITHUB_USER = "yurileonardos"  # <--- SEU USUÁRIO AQUI
+GITHUB_USER = "yurileonardos"  # <--- COLOQUE SEU USUÁRIO AQUI
 REPO_NAME = "meu-podcast-diario"
 BASE_URL = f"https://{GITHUB_USER}.github.io/{REPO_NAME}"
 
-# --- FONTES (Curadoria Yuri: Vila & Cruzeiro) ---
+# --- MEGABANCO DE FONTES (Curadoria Yuri Completa) ---
 FEEDS = {
-    "GOIÁS (Política e Cotidiano)": [
+    "GOIÁS (Cotidiano, Clima, Política)": [
         "https://g1.globo.com/rss/g1/goias/",
         "https://www.jornalopcao.com.br/feed/",
-        "https://www.maisgoias.com.br/feed/"
+        "https://www.maisgoias.com.br/feed/",
+        "https://opopular.com.br/rss",
+        "https://www.dm.com.br/feed"
     ],
     "ESPORTES (Vila Nova & Cruzeiro)": [
-        "https://ge.globo.com/rss/ge/futebol/times/vila-nova/",   # VILA NOVA
-        "https://ge.globo.com/rss/ge/futebol/times/cruzeiro/",    # CRUZEIRO
+        "https://ge.globo.com/rss/ge/futebol/times/vila-nova/",   
+        "https://ge.globo.com/rss/ge/futebol/times/cruzeiro/",
         "https://www.maisgoias.com.br/category/esportes/vila-nova/feed/"
     ],
-    "BRASIL (Política, Justiça, Economia)": [
+    "CONCURSOS E OPORTUNIDADES": [
+        "https://g1.globo.com/rss/g1/concursos-e-emprego/",
+        "https://jcconcursos.com.br/rss/noticias"
+    ],
+    "BRASIL (Política, Justiça, Social)": [
+        "https://rss.uol.com.br/feed/noticias.xml",
+        "https://feeds.folha.uol.com.br/poder/rss091.xml",
+        "https://www.estadao.com.br/rss/politica",
+        "https://www.cnnbrasil.com.br/feed/",
         "https://www.brasil247.com/feed",
         "https://cartacapital.com.br/feed/",
         "https://agenciabrasil.ebc.com.br/rss/ultimas-noticias/feed.xml",
-        "https://feeds.folha.uol.com.br/poder/rss091.xml"
+        "https://www.camara.leg.br/noticias/rss/ultimas-noticias",
+        "https://www12.senado.leg.br/noticias/feed/todas/rss"
     ],
-    "MUNDO (Todos os Continentes)": [
-        "https://brasil.elpais.com/rss/elpais/america.xml",
-        "https://www.bbc.com/portuguese/index.xml", 
-        "https://rss.dw.com/xml/rss-br-all",        
-        "https://news.un.org/feed/subscribe/pt/news/all/rss.xml" 
+    "MUNDO (Geopolítica Global)": [
+        "https://brasil.elpais.com/rss/elpais/america.xml",      
+        "https://www.bbc.com/portuguese/index.xml",              
+        "https://rss.dw.com/xml/rss-br-all",                     
+        "https://news.un.org/feed/subscribe/pt/news/all/rss.xml", 
+        "https://rss.nytimes.com/services/xml/rss/nyt/World.xml", 
+        "https://www.theguardian.com/world/rss"                  
     ],
-    "CIÊNCIA E TECNOLOGIA": [
+    "CIÊNCIA, TECNOLOGIA E IA": [
         "https://super.abril.com.br/feed/",
+        "https://exame.com/feed/",
         "https://gizmodo.uol.com.br/feed/",
+        "https://www.nature.com/nature.rss"
     ]
 }
 
 def get_news_summary():
     texto_final = ""
-    print("Coletando notícias...")
+    print("Coletando notícias de todas as áreas...")
     for categoria, urls in FEEDS.items():
         texto_final += f"\n--- {categoria} ---\n"
         for url in urls:
             try:
                 feed = feedparser.parse(url)
-                # Pega até 4 notícias de cada para ter variedade
-                for entry in feed.entries[:4]:
+                # Pega 3 notícias de cada para garantir variedade sem estourar limite
+                for entry in feed.entries[:3]:
                     title = entry.title
                     summary = entry.summary if 'summary' in entry else ""
-                    summary = re.sub(r'<[^>]+>', '', summary)[:300]
-                    texto_final += f"- {title}: {summary}\n"
+                    summary = re.sub(r'<[^>]+>', '', summary)[:250]
+                    
+                    source_name = "Fonte Desconhecida"
+                    if 'source' in entry: source_name = entry.source.title
+                    elif 'feed' in feed and 'title' in feed.feed: source_name = feed.feed.title
+                    
+                    texto_final += f"[{source_name}] {title}: {summary}\n"
             except: continue
     return texto_final
 
@@ -66,13 +86,13 @@ def clean_text_for_speech(text):
     text = re.sub(r'\[.*?\]', '', text)
     text = re.sub(r'http\S+', '', text)
     text = text.replace("BRL", "reais")
+    text = text.replace("USD", "dólares")
     return text
 
 def make_script(news_text):
     api_key = os.environ.get("GEMINI_API_KEY")
     genai.configure(api_key=api_key)
 
-    # Auto-seletor de modelo
     model_name = 'gemini-pro'
     try:
         for m in genai.list_models():
@@ -86,36 +106,46 @@ def make_script(news_text):
         model = genai.GenerativeModel(model_name)
         data_hoje = datetime.now(pytz.timezone('America/Sao_Paulo')).strftime('%d de %B')
         
-        # --- PROMPT PERSONALIZADO: YURI, VILA & CRUZEIRO ---
+        # PROMPT COMPLETO COM TODOS OS REQUISITOS DO YURI
         prompt = f"""
-        Você é um podcaster inteligente e carismático gravando um áudio exclusivo para o ouvinte Yuri.
-        Data de hoje: {data_hoje}.
+        Você é o âncora pessoal do Yuri. Data: {data_hoje}.
         
-        ESTRUTURA OBRIGATÓRIA:
-        1. SAUDAÇÃO: Comece EXATAMENTE com: "Olá, seja bem-vindo Yuri ao nosso bate-papo diário! Hoje é {data_hoje}..."
+        SUA MISSÃO: Cruzar informações de várias fontes e criar um resumo rico e sério.
         
-        2. CONTEÚDO (Bate-papo fluído):
-           - GOIÁS: Foco em políticas públicas, educação e o que acontece em Goiânia.
-           
-           - ESPORTES (Obrigatório): 
-             Fale sobre o VILA NOVA FUTEBOL CLUBE (Tigrão) E sobre o CRUZEIRO ESPORTE CLUBE (Raposa/Cabuloso). 
-             Traga as últimas do Vila e do Cruzeiro com igual importância. 
-             (Ignore outros times como Flamengo ou Corinthians, a menos que joguem contra Vila ou Cruzeiro).
-           
-           - BRASIL: Política e economia (foco em justiça, social e mercado).
-           
-           - MUNDO: Panorama internacional de todos os continentes (África, Ásia, Europa, Américas). Busque diversidade.
-           
-           - CIÊNCIA/TEC: Uma curiosidade rápida se houver.
+        1. SAUDAÇÃO: "Olá, bom dia Yuri! Aqui é o seu mixer diário de notícias. Hoje é {data_hoje}." (Cite o nome APENAS aqui).
         
-        3. ENCERRAMENTO: Termine EXATAMENTE com: "Espero que tenha gostado, Yuri. Um ótimo dia para você e até amanhã!"
+        2. BLOCOS OBRIGATÓRIOS (Aborde todos se houver notícias):
+           
+           - GOIÁS & GOIÂNIA:
+             * Foco total em: Políticas públicas estaduais/municipais, ações do Governo/Prefeitura.
+             * Questões sociais, educação e saúde em Goiás.
+             * CLIMA: Se houver informação nas fontes locais, informe a previsão do tempo para Goiânia.
+           
+           - ESPORTE (VILA NOVA & CRUZEIRO):
+             * Prioridade absoluta para o Tigrão (Vila) e a Raposa (Cruzeiro).
+             * Ignore outros times.
+           
+           - BRASIL (POLÍTICA & SOCIEDADE):
+             * Ações de Estado, Justiça, Segurança Pública e Economia.
+             * Mercado de trabalho e Questões Sociais.
+           
+           - OPORTUNIDADES:
+             * CONCURSOS PÚBLICOS: Destaque editais abertos ou notícias relevantes de carreira.
+           
+           - INOVAÇÃO & FUTURO:
+             * Inteligência Artificial, Tecnologia, Ciência e Inovação.
+           
+           - MUNDO (GEOPOLÍTICA):
+             * Panorama global (Américas, Europa, África, Ásia). Traduza e resuma as fontes internacionais.
+        
+        3. DESPEDIDA: "Espero que tenha gostado. Um ótimo dia e até amanhã!"
         
         ESTILO:
-        - Conversado, como se fosse um amigo contando as novidades.
-        - Use conectivos ("E no mundo da bola, Yuri...", "Agora olhando para fora do país...").
-        - NÃO descreva sons.
+        - Tom de conversa inteligente.
+        - Cruze as fontes (ex: "Enquanto a Folha diz X, a Gazeta aponta Y").
+        - Seja direto e informativo.
         
-        MATÉRIA PRIMA:
+        DADOS BRUTOS:
         {news_text}
         """
         
@@ -142,7 +172,7 @@ def update_rss(audio_filename, title):
     rss_item = f"""
     <item>
       <title>{safe_title}</title>
-      <description>Notícias para Yuri: Vila, Cruzeiro, Goiás e Mundo.</description>
+      <description>Resumo diário completo: Goiás, Vila, Cruzeiro, Política, Concursos e Mundo.</description>
       <enclosure url="{audio_url}" type="audio/mpeg" />
       <guid isPermaLink="true">{audio_url}</guid>
       <pubDate>{now.strftime("%a, %d %b %Y %H:%M:%S %z")}</pubDate>
