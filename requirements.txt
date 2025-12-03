@@ -1,4 +1,5 @@
-google-generativeai>=0.3.0
+google-generativeai
 feedparser
-edge-tts
+edge-tts>=6.1.9
 pytz
+aiohttp
