@@ -6,19 +6,24 @@ import edge_tts
 from datetime import datetime
 import pytz
 from xml.sax.saxutils import escape
-import re # Ferramenta de limpeza de texto
+import re
 
 # --- CONFIGURAÇÕES DO USUÁRIO ---
-GITHUB_USER = "yurileonardos"  # <--- COLOQUE SEU USUÁRIO AQUI
+GITHUB_USER = "yurileonardos"  # <--- SEU USUÁRIO AQUI
 REPO_NAME = "meu-podcast-diario"
 BASE_URL = f"https://{GITHUB_USER}.github.io/{REPO_NAME}"
 
-# --- FONTES ---
+# --- FONTES (Curadoria Yuri: Vila & Cruzeiro) ---
 FEEDS = {
     "GOIÁS (Política e Cotidiano)": [
         "https://g1.globo.com/rss/g1/goias/",
         "https://www.jornalopcao.com.br/feed/",
         "https://www.maisgoias.com.br/feed/"
+    ],
+    "ESPORTES (Vila Nova & Cruzeiro)": [
+        "https://ge.globo.com/rss/ge/futebol/times/vila-nova/",   # VILA NOVA
+        "https://ge.globo.com/rss/ge/futebol/times/cruzeiro/",    # CRUZEIRO
+        "https://www.maisgoias.com.br/category/esportes/vila-nova/feed/"
     ],
     "BRASIL (Política, Justiça, Economia)": [
         "https://www.brasil247.com/feed",
@@ -26,13 +31,15 @@ FEEDS = {
         "https://agenciabrasil.ebc.com.br/rss/ultimas-noticias/feed.xml",
         "https://feeds.folha.uol.com.br/poder/rss091.xml"
     ],
+    "MUNDO (Todos os Continentes)": [
+        "https://brasil.elpais.com/rss/elpais/america.xml",
+        "https://www.bbc.com/portuguese/index.xml", 
+        "https://rss.dw.com/xml/rss-br-all",        
+        "https://news.un.org/feed/subscribe/pt/news/all/rss.xml" 
+    ],
     "CIÊNCIA E TECNOLOGIA": [
         "https://super.abril.com.br/feed/",
         "https://gizmodo.uol.com.br/feed/",
-    ],
-    "ESPORTES (Filtro Específico)": [
-        "https://ge.globo.com/rss/ge/futebol/times/vila-nova/", # Vila Nova
-        "https://ge.globo.com/rss/ge/futebol/times/cruzeiro/"   # Cruzeiro
     ]
 }
 
@@ -44,23 +51,21 @@ def get_news_summary():
         for url in urls:
             try:
                 feed = feedparser.parse(url)
-                for entry in feed.entries[:4]: # Pega 4 de cada para ter variedade
+                # Pega até 4 notícias de cada para ter variedade
+                for entry in feed.entries[:4]:
                     title = entry.title
                     summary = entry.summary if 'summary' in entry else ""
-                    # Limpa HTML básico
                     summary = re.sub(r'<[^>]+>', '', summary)[:300]
                     texto_final += f"- {title}: {summary}\n"
             except: continue
     return texto_final
 
-# --- FUNÇÃO DE LIMPEZA DE VOZ (NOVO) ---
 def clean_text_for_speech(text):
-    # Remove marcações de Markdown que o robô lê errado
-    text = text.replace("*", "") # Remove asteriscos
-    text = text.replace("#", "") # Remove hashtags
-    text = re.sub(r'\[.*?\]', '', text) # Remove coisas entre colchetes ex: [Música]
-    text = re.sub(r'http\S+', '', text) # Remove links de internet
-    text = text.replace("BRL", "reais") # Melhora leitura de moeda
+    text = text.replace("*", "")
+    text = text.replace("#", "")
+    text = re.sub(r'\[.*?\]', '', text)
+    text = re.sub(r'http\S+', '', text)
+    text = text.replace("BRL", "reais")
     return text
 
 def make_script(news_text):
@@ -81,24 +86,34 @@ def make_script(news_text):
         model = genai.GenerativeModel(model_name)
         data_hoje = datetime.now(pytz.timezone('America/Sao_Paulo')).strftime('%d de %B')
         
-        # PROMPT REFINADO (Estilo NotebookLM / Bate-Papo)
+        # --- PROMPT PERSONALIZADO: YURI, VILA & CRUZEIRO ---
         prompt = f"""
-        Aja como um podcaster inteligente e carismático. 
+        Você é um podcaster inteligente e carismático gravando um áudio exclusivo para o ouvinte Yuri.
         Data de hoje: {data_hoje}.
         
-        SEU OBJETIVO:
-        Criar um roteiro de áudio fluído, parecendo um bate-papo direto com o ouvinte (estilo "NotebookLM" ou rádio moderna). NÃO PAREÇA UM ROBÔ LENDO LISTA.
+        ESTRUTURA OBRIGATÓRIA:
+        1. SAUDAÇÃO: Comece EXATAMENTE com: "Olá, seja bem-vindo Yuri ao nosso bate-papo diário! Hoje é {data_hoje}..."
         
-        REGRAS DE CONTEÚDO (CRUCIAL):
-        1. Filtre APENAS estes temas: Políticas públicas, educação, tecnologia, ciência, economia, saúde, segurança, justiça, geopolítica, meio ambiente.
-        2. ESPORTES: Fale APENAS sobre VILA NOVA ou CRUZEIRO. Ignore qualquer outro time (Flamengo, Corinthians, etc). Se não tiver notícia do Vila ou Cruzeiro, não fale de esporte.
-        3. Ignore fofocas, novelas e celebridades.
+        2. CONTEÚDO (Bate-papo fluído):
+           - GOIÁS: Foco em políticas públicas, educação e o que acontece em Goiânia.
+           
+           - ESPORTES (Obrigatório): 
+             Fale sobre o VILA NOVA FUTEBOL CLUBE (Tigrão) E sobre o CRUZEIRO ESPORTE CLUBE (Raposa/Cabuloso). 
+             Traga as últimas do Vila e do Cruzeiro com igual importância. 
+             (Ignore outros times como Flamengo ou Corinthians, a menos que joguem contra Vila ou Cruzeiro).
+           
+           - BRASIL: Política e economia (foco em justiça, social e mercado).
+           
+           - MUNDO: Panorama internacional de todos os continentes (África, Ásia, Europa, Américas). Busque diversidade.
+           
+           - CIÊNCIA/TEC: Uma curiosidade rápida se houver.
         
-        ESTILO DE FALA:
-        - Não use "Bom dia ouvinte". Comece direto no assunto: "Olá, hoje é {data_hoje} e vamos falar sobre..."
-        - Use frases de conexão: "Mudando de assunto...", "Olha que interessante...", "No cenário econômico...".
-        - NÃO descreva sons (Ex: não escreva [Música sobe], não escreva *risos*). Escreva APENAS o que deve ser falado.
-        - Não leia manchetes. Explique a notícia.
+        3. ENCERRAMENTO: Termine EXATAMENTE com: "Espero que tenha gostado, Yuri. Um ótimo dia para você e até amanhã!"
+        
+        ESTILO:
+        - Conversado, como se fosse um amigo contando as novidades.
+        - Use conectivos ("E no mundo da bola, Yuri...", "Agora olhando para fora do país...").
+        - NÃO descreva sons.
         
         MATÉRIA PRIMA:
         {news_text}
@@ -113,9 +128,7 @@ def make_script(news_text):
         return f"Erro técnico: {str(e)[:100]}"
 
 async def gen_audio(text, filename):
-    # Limpa o texto antes de enviar para a voz
     clean_text = clean_text_for_speech(text)
-    # Voz 'Antonio' é mais jornalística/séria. 'Francisca' é mais suave.
     communicate = edge_tts.Communicate(clean_text, "pt-BR-AntonioNeural") 
     await communicate.save(filename)
 
@@ -129,7 +142,7 @@ def update_rss(audio_filename, title):
     rss_item = f"""
     <item>
       <title>{safe_title}</title>
-      <description>Notícias de Goiás, Brasil e Mundo.</description>
+      <description>Notícias para Yuri: Vila, Cruzeiro, Goiás e Mundo.</description>
       <enclosure url="{audio_url}" type="audio/mpeg" />
       <guid isPermaLink="true">{audio_url}</guid>
       <pubDate>{now.strftime("%a, %d %b %Y %H:%M:%S %z")}</pubDate>
@@ -139,13 +152,12 @@ def update_rss(audio_filename, title):
     header = f"""<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
   <channel>
-    <title>Resumo Diario Personalizado</title>
-    <description>Goiás, Brasil, Mundo e Esportes Selecionados.</description>
+    <title>Resumo Diario do Yuri</title>
+    <description>Notícias personalizadas.</description>
     <link>{BASE_URL}</link>
     <language>pt-br</language>
     <itunes:image href="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Flag_of_Brazil.svg/640px-Flag_of_Brazil.svg.png"/>
 """
-    # Força recriação do XML para limpar cache antigo
     with open(rss_file, 'w', encoding='utf-8') as f:
         f.write(header + rss_item + "\n  </channel>\n</rss>")
 
