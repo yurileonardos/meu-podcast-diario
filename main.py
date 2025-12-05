@@ -9,7 +9,7 @@ from xml.sax.saxutils import escape
 import re
 
 # --- CONFIGURAÇÕES DO USUÁRIO ---
-GITHUB_USER = "yurileonardos"  # <--- COLOQUE SEU USUÁRIO AQUI
+GITHUB_USER = "yurileonardos"  # <--- COLOQUE SEU USUÁRIO GITHUB AQUI
 REPO_NAME = "meu-podcast-diario"
 BASE_URL = f"https://{GITHUB_USER}.github.io/{REPO_NAME}"
 
@@ -20,7 +20,13 @@ FEEDS = {
         "https://www.jornalopcao.com.br/feed/",
         "https://www.maisgoias.com.br/feed/",
         "https://opopular.com.br/rss",
-        "https://www.dm.com.br/feed"
+        "https://www.dm.com.br/feed",
+        "https://opopular.com.br/",
+        "https://diariodegoias.com.br/",
+        "https://ohoje.com/",
+        "https://www.climatempo.com.br/previsao-do-tempo/15-dias/cidade/88/goiania-go",
+        "https://g1.globo.com/previsao-do-tempo/go/goiania.ghtml"
+        
     ],
     "ESPORTES (Vila Nova & Cruzeiro)": [
         "https://ge.globo.com/rss/ge/futebol/times/vila-nova/",   
@@ -29,9 +35,11 @@ FEEDS = {
     ],
     "CONCURSOS E OPORTUNIDADES": [
         "https://g1.globo.com/rss/g1/concursos-e-emprego/",
-        "https://jcconcursos.com.br/rss/noticias"
+        "https://jcconcursos.com.br/rss/noticias",
+        "https://www.pciconcursos.com.br/"
+        
     ],
-    "BRASIL (Política, Justiça, Social)": [
+    "BRASIL (Política, Justiça, Social, Economia)": [
         "https://rss.uol.com.br/feed/noticias.xml",
         "https://feeds.folha.uol.com.br/poder/rss091.xml",
         "https://www.estadao.com.br/rss/politica",
@@ -40,7 +48,32 @@ FEEDS = {
         "https://cartacapital.com.br/feed/",
         "https://agenciabrasil.ebc.com.br/rss/ultimas-noticias/feed.xml",
         "https://www.camara.leg.br/noticias/rss/ultimas-noticias",
-        "https://www12.senado.leg.br/noticias/feed/todas/rss"
+        "https://www12.senado.leg.br/noticias/feed/todas/rss",
+        "https://www.globo.com/",
+        "https://iclnoticias.com.br/",
+        "https://veja.abril.com.br/",
+        "https://exame.com/",
+        "https://exame.com/negocios/",
+        "https://valor.globo.com/especiais/",
+        "https://www.estadao.com.br/?srsltid=AfmBOoqR1gXuWZuc81g-4O8WRqKbCcTkE_jqUgiT4KXkolcze2jlEiLU",
+        "https://elpais.com/america/",
+        "https://noticias.uol.com.br/",
+        "https://www.seudinheiro.com/",
+        "https://agenciabrasil.ebc.com.br/",
+        "https://piaui.folha.uol.com.br/",
+        "https://www.infomoney.com.br/",
+        "https://www.reuters.com/",
+        "https://apnews.com/",
+        "https://www.correiobraziliense.com.br/",
+        "https://www.youtube.com/@desmascarandooficial",
+        "https://www.youtube.com/@InstitutoConhecimentoLiberta",
+        "https://www.gazetadopovo.com.br/",
+        "https://www.folha.uol.com.br/",
+        "https://www.bbc.com/portuguese",
+        "https://www.metropoles.com/",
+        "https://www.youtube.com/watch?v=nUG_py5XcS8&list=PL5DFl3pSRD_9TJB8i1IHZfl63rfF0DrcH"
+        
+        
     ],
     "MUNDO (Geopolítica Global)": [
         "https://brasil.elpais.com/rss/elpais/america.xml",      
@@ -48,13 +81,50 @@ FEEDS = {
         "https://rss.dw.com/xml/rss-br-all",                     
         "https://news.un.org/feed/subscribe/pt/news/all/rss.xml", 
         "https://rss.nytimes.com/services/xml/rss/nyt/World.xml", 
-        "https://www.theguardian.com/world/rss"                  
+        "https://www.theguardian.com/world/rss",
+        "https://iclnoticias.com.br/",
+        "https://www.globo.com/",
+        "https://cartacapital.com.br/feed/",
+        "https://www.uol.com.br/",
+        "https://rss.uol.com.br/feed/noticias.xml",
+        "https://feeds.folha.uol.com.br/poder/rss091.xml",
+        "https://www.estadao.com.br/rss/politica",
+        "https://www.cnnbrasil.com.br/feed/",
+        "https://www.brasil247.com/feed",
+        "https://www.clarin.com/",
+        "https://pt.euronews.com/noticias/internacional",
+        "https://www.cnnbrasil.com.br/internacional/",
+        "https://exame.com/pagina-especial/exame-international/",
+        "https://www.estadao.com.br/blogs-e-colunas/busca/?token={%22ed%22:%22internacional%22}",
+        "https://elpais.com/america/",
+        "https://noticias.uol.com.br/",
+        "https://piaui.folha.uol.com.br/",
+        "https://www.reuters.com/",
+        "https://apnews.com/",
+        "https://www.dw.com/pt-br/not%C3%ADcias/s-7111",
+        "https://www.theguardian.com/international",
+        "https://www.em.com.br/",
+        "https://forbes.com.br/"
+        
     ],
-    "CIÊNCIA, TECNOLOGIA E IA": [
+    "CIÊNCIA, TECNOLOGIA, IA, LITERATURA, CULTURA, ARTE E SAÚDE": [
         "https://super.abril.com.br/feed/",
         "https://exame.com/feed/",
         "https://gizmodo.uol.com.br/feed/",
-        "https://www.nature.com/nature.rss"
+        "https://www.nature.com/nature.rss",
+        "https://exame.com/inteligencia-artificial/",
+        "https://quatrocincoum.com.br/",
+        "https://cbl.org.br/quem-somos/#associacao",
+        "https://www.academia.org.br/",
+        "https://www.abc.org.br/",
+        "https://www.gov.br/cultura/pt-br",
+        "https://mapa.cultura.gov.br/",
+        "https://www1.folha.uol.com.br/ilustrada/",
+        "https://www.estadao.com.br/cultura/?srsltid=AfmBOorJbjPG5hLABb6xXkgBh013yAX6hBPFbLNnVDqYU9Sc-mAgFNLN",
+        "https://www.reuters.com/",
+        "https://apnews.com/",
+        "https://saude.abril.com.br/",
+        "https://www1.folha.uol.com.br/equilibrioesaude/"
     ]
 }
 
@@ -112,12 +182,12 @@ def make_script(news_text):
         
         SUA MISSÃO: Cruzar informações de várias fontes e criar um resumo rico e sério.
         
-        1. SAUDAÇÃO: "Olá, bom dia Yuri! Aqui é o seu mixer diário de notícias. Hoje é {data_hoje}." (Cite o nome APENAS aqui).
+        1. SAUDAÇÃO: "Olá, bom dia Yuri! Aqui é o seu resumo diário de notícias. Hoje é {data_hoje}." (Cite o nome APENAS aqui).
         
         2. BLOCOS OBRIGATÓRIOS (Aborde todos se houver notícias):
            
-           - GOIÁS & GOIÂNIA:
-             * Foco total em: Políticas públicas estaduais/municipais, ações do Governo/Prefeitura.
+           - GOIÂNIA & GOIÁS :
+             * Foco total em: Políticas públicas municipais/estaduais, ações dos Governo: Municipal (Prefeitura) e Estadual (Estadual).
              * Questões sociais, educação e saúde em Goiás.
              * CLIMA: Se houver informação nas fontes locais, informe a previsão do tempo para Goiânia.
            
@@ -128,12 +198,14 @@ def make_script(news_text):
            - BRASIL (POLÍTICA & SOCIEDADE):
              * Ações de Estado, Justiça, Segurança Pública e Economia.
              * Mercado de trabalho e Questões Sociais.
-           
+                       
            - OPORTUNIDADES:
              * CONCURSOS PÚBLICOS: Destaque editais abertos ou notícias relevantes de carreira.
            
-           - INOVAÇÃO & FUTURO:
+           - INOVAÇÃO & FUTURO & CULTURA & SAÚDE:
              * Inteligência Artificial, Tecnologia, Ciência e Inovação.
+             * Cultura e Prêmios de Reconhecimento.
+             * Saúde.
            
            - MUNDO (GEOPOLÍTICA):
              * Panorama global (Américas, Europa, África, Ásia). Traduza e resuma as fontes internacionais.
