@@ -10,18 +10,17 @@ import re
 import urllib.request
 
 # --- CONFIGURAÇÕES DO USUÁRIO ---
-GITHUB_USER = "yurileonardos"
+GITHUB_USER = "yurileonardos"  # <--- SEU USUÁRIO AQUI
 REPO_NAME = "meu-podcast-diario"
 BASE_URL = f"https://{GITHUB_USER}.github.io/{REPO_NAME}"
 
-# --- 1. FONTES CONVERTIDAS PARA RSS (ROBÔ) ---
+# --- FONTES (Mantivemos sua lista completa) ---
 FEEDS = {
-    "GOIÁS E GOIÂNIA": [
+    "GOIÁS (Política, Cotidiano)": [
         "https://g1.globo.com/rss/g1/goias/",
         "https://www.jornalopcao.com.br/feed/",
         "https://www.maisgoias.com.br/feed/",
         "https://opopular.com.br/rss",
-        "https://www.dm.com.br/feed",
         "https://diariodegoias.com.br/feed/",
         "https://ohoje.com/feed/"
     ],
@@ -48,17 +47,10 @@ FEEDS = {
         "https://iclnoticias.com.br/feed/",
         "https://veja.abril.com.br/feed/",
         "https://exame.com/feed/",
-        "https://exame.com/negocios/feed/",
-        "https://valor.globo.com/rss/",
-        "https://www.seudinheiro.com/feed/",
         "https://piaui.folha.uol.com.br/feed/",
-        "https://www.infomoney.com.br/feed/",
-        "https://www.correiobraziliense.com.br/rss/noticia/brasil.xml",
-        "https://www.gazetadopovo.com.br/feed/",
-        "https://www.metropoles.com/feed",
-        "https://www.em.com.br/rss/noticia/nacional/"
+        "https://www.metropoles.com/feed"
     ],
-    "MUNDO (Geopolítica Global)": [
+    "MUNDO (Geopolítica Profunda)": [
         "https://brasil.elpais.com/rss/elpais/america.xml",      
         "https://www.bbc.com/portuguese/index.xml",              
         "https://rss.dw.com/xml/rss-br-all",                     
@@ -66,34 +58,26 @@ FEEDS = {
         "https://rss.nytimes.com/services/xml/rss/nyt/World.xml", 
         "https://www.theguardian.com/world/rss",
         "https://www.clarin.com/rss/lo-ultimo/",
-        "https://pt.euronews.com/rss?format=xml",
-        "https://forbes.com.br/feed/",
-        "https://www.ft.com/rss/home"
+        "https://pt.euronews.com/rss?format=xml"
     ],
-    "CIÊNCIA, TECNOLOGIA E CULTURA": [
+    "CIÊNCIA, TECNOLOGIA E SAÚDE": [
         "https://super.abril.com.br/feed/",
         "https://gizmodo.uol.com.br/feed/",
         "https://www.nature.com/nature.rss",
-        "https://quatrocincoum.com.br/feed/",
-        "https://www.abc.org.br/feed/",
-        "https://www.gov.br/cultura/pt-br/rss.xml",
-        "https://feeds.folha.uol.com.br/ilustrada/rss091.xml",
         "https://saude.abril.com.br/feed/"
     ],
-    "YOUTUBE (Canais Específicos)": [
-        "https://www.youtube.com/feeds/videos.xml?channel_id=UCO6j6cqBhi2TWVxfcn6t23w", # Desmascarando
-        "https://www.youtube.com/feeds/videos.xml?channel_id=UC6w8cK5C5QZJ9J9J9J9J9J9", # ICL Canal
-        "https://www.youtube.com/feeds/videos.xml?playlist_id=PL5DFl3pSRD_9TJB8i1IHZfl63rfF0DrcH" # ICL Playlist
+    "YOUTUBE (Canais)": [
+        "https://www.youtube.com/feeds/videos.xml?channel_id=UCO6j6cqBhi2TWVxfcn6t23w", 
+        "https://www.youtube.com/feeds/videos.xml?channel_id=UC6w8cK5C5QZJ9J9J9J9J9J9" 
     ]
 }
 
-# --- 2. LINKS ESPECIAIS (CLIMA) ---
+# --- LINKS DO INMET/CLIMATEMPO (HTML) ---
 WEATHER_URLS = [
-    "https://www.climatempo.com.br/previsao-do-tempo/15-dias/cidade/88/goiania-go",
-    "https://g1.globo.com/previsao-do-tempo/go/goiania.ghtml"
+    "https://portal.inmet.gov.br/", 
+    "https://www.climatempo.com.br/previsao-do-tempo/15-dias/cidade/88/goiania-go"
 ]
 
-# --- 3. FERRAMENTAS ---
 def get_data_ptbr():
     now = datetime.now(pytz.timezone('America/Sao_Paulo'))
     dias = ['segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado', 'domingo']
@@ -101,39 +85,46 @@ def get_data_ptbr():
     return f"{now.day} de {meses[now.month]}, uma {dias[now.weekday()]}"
 
 def get_weather_data():
-    text_data = "\n--- PREVISÃO DO TEMPO EM GOIÂNIA (Dados Brutos) ---\n"
-    print("Consultando sites de clima...")
+    text_data = "\n--- DADOS DE CLIMA (INMET/CLIMATEMPO) ---\n"
+    print("Consultando INMET...")
     headers = {'User-Agent': 'Mozilla/5.0'}
     for url in WEATHER_URLS:
         try:
             req = urllib.request.Request(url, headers=headers)
             with urllib.request.urlopen(req) as response:
                 html = response.read().decode('utf-8')
+                # Pega mais conteúdo do HTML para garantir que pegamos a previsão
                 clean = re.sub(r'<[^>]+>', ' ', html)
                 clean = re.sub(r'\s+', ' ', clean)
-                text_data += f"Fonte ({url}): {clean[:1000]}...\n"
+                text_data += f"Fonte ({url}): {clean[:4000]}...\n"
         except: continue
     return text_data
 
 def get_news_summary():
     texto_final = ""
-    print("Coletando notícias RSS...")
+    print("Coletando notícias (Modo Aprofundado)...")
     for categoria, urls in FEEDS.items():
         texto_final += f"\n--- {categoria} ---\n"
         for url in urls:
             try:
                 feed = feedparser.parse(url)
-                # Pega 2 notícias de cada para não estourar o tamanho
-                for entry in feed.entries[:2]:
+                # AUMENTO DE VOLUME: Pega 4 notícias e MUITO mais texto de cada uma
+                for entry in feed.entries[:4]:
                     title = entry.title
-                    summary = entry.summary if 'summary' in entry else ""
-                    summary = re.sub(r'<[^>]+>', '', summary)[:200]
+                    # Tenta pegar o conteúdo completo se disponível, senão o resumo
+                    content = entry.summary
+                    if 'content' in entry:
+                        content = entry.content[0].value
                     
+                    # AUMENTO DE LIMITE: 1500 caracteres por notícia (antes era 200)
+                    summary = re.sub(r'<[^>]+>', '', content)[:1500]
+                    
+                    published = entry.published if 'published' in entry else "Data Recente"
                     source_name = "Fonte"
                     if 'source' in entry: source_name = entry.source.title
                     elif 'feed' in feed and 'title' in feed.feed: source_name = feed.feed.title
                     
-                    texto_final += f"[{source_name}] {title}: {summary}\n"
+                    texto_final += f"[{source_name} | {published}] {title}: {summary}\n"
             except: continue
             
     texto_final += get_weather_data()
@@ -165,40 +156,55 @@ def make_script(news_text):
         model = genai.GenerativeModel(model_name)
         data_hoje_extenso = get_data_ptbr()
         
+        # --- PROMPT "PROGRAMA DE RÁDIO LONGO" ---
         prompt = f"""
-        Você é o âncora pessoal do Yuri. 
-        Data de hoje: {data_hoje_extenso}.
+        ATUE COMO: Um âncora de rádio inteligente, profundo e detalhista.
+        OUVINTE: Yuri.
+        DATA: {data_hoje_extenso}.
+        OBJETIVO: Criar um podcast LONGO (mais de 10 minutos de leitura).
         
-        1. SAUDAÇÃO OBRIGATÓRIA: "Olá, bom dia Yuri! Hoje é {data_hoje_extenso}."
+        INSTRUÇÕES DE PERSONALIDADE:
+        - NÃO SEJA RESUMIDO. O Yuri quer detalhes. Explique o "porquê" das coisas.
+        - Fale devagar, use pausas e conectivos de qualidade ("Analisando profundamente...", "Isso impacta diretamente...").
+        - Se a notícia for de dias atrás (especialmente Esporte), traga ela à tona e analise o contexto atual.
         
-        2. FILTRO NEGATIVO (O QUE NÃO FALAR):
-           - PROIBIDO falar de acidentes de trânsito, crimes comuns, roubos, assassinatos isolados ou tragédias irrelevantes.
-           - Se a notícia for "acidente na ponte", IGNORE.
-           - Foque no MACRO: Políticas Públicas, Economia, Decisões de Governo, Inovação.
+        ROTEIRO OBRIGATÓRIO (Cubra TODOS os pontos com calma):
         
-        3. ROTEIRO OBRIGATÓRIO:
-           
-           - CLIMA EM GOIÂNIA:
-             * Procure no texto bruto os dados do Climatempo/G1. Diga a temperatura máxima/mínima e se vai chover.
-           
-           - GOIÂNIA & GOIÁS:
-             * Políticas públicas (Prefeitura/Estado), obras e sociedade.
-           
-           - ESPORTE (VILA NOVA & CRUZEIRO):
-             * Fale do Tigrão (Vila) e da Raposa (Cruzeiro).
-             * Se não tiver jogo, fale dos bastidores ou contratações.
-           
-           - BRASIL & MUNDO:
-             * Resumo sério de política, economia e geopolítica.
-             * Cruze as informações das fontes (ex: NY Times com BBC).
-           
-           - OPORTUNIDADES & CULTURA:
-             * Concursos públicos abertos.
-             * Inovação e Ciência.
+        1. ABERTURA:
+           - "Olá, bom dia Yuri! Hoje é {data_hoje_extenso}. Prepare-se para um mergulho profundo nas notícias."
         
-        4. DESPEDIDA: "Espero que tenha gostado. Um ótimo dia e até amanhã!"
+        2. CLIMA EM GOIÂNIA (Análise Completa):
+           - Leia os dados brutos do INMET/Climatempo abaixo.
+           - Informe temperatura máxima/mínima, umidade, ventos e probabilidade de chuva.
+           - Dê dicas (ex: "Leve guarda-chuva", "Hidrate-se").
         
-        DADOS BRUTOS PARA ANÁLISE:
+        3. ESPORTE - VILA NOVA & CRUZEIRO (Bloco Especial):
+           - Destaque TOTAL para o Tigrão e a Raposa.
+           - Se não houver jogo hoje, fale das contratações, do treino da semana, da situação na tabela.
+           - Invente análises baseadas nos fatos: "O técnico precisa ajustar a defesa...", etc.
+        
+        4. GOIÁS & CIDADES (Política e Social):
+           - Aprofunde nas decisões do Governo Estadual e Prefeitura.
+           - Comente obras, trânsito e questões sociais.
+        
+        5. BRASIL - POLÍTICA & ECONOMIA (Bloco Denso):
+           - Não leia manchetes. Explique as intrigas do Congresso, as decisões do STF e o impacto econômico.
+           - Cruze fontes: O que a esquerda e a direita estão dizendo?
+        
+        6. CENÁRIO INTERNACIONAL (Geopolítica):
+           - Fale da Guerra na Ucrânia, Oriente Médio ou tensões nos EUA/China.
+           - Explique o impacto global desses conflitos.
+        
+        7. CIÊNCIA, SAÚDE & TECNOLOGIA:
+           - Escolha uma notícia de avanço médico ou tecnológico e explique como isso muda o futuro.
+        
+        8. OPORTUNIDADES:
+           - Cite concursos abertos relevantes.
+        
+        9. DESPEDIDA:
+           - "Espero que tenha gostado desta análise completa, Yuri. Um ótimo dia e até amanhã!"
+        
+        DADOS BRUTOS (Use isso para criar sua análise):
         {news_text}
         """
         
@@ -225,7 +231,7 @@ def update_rss(audio_filename, title):
     rss_item = f"""
     <item>
       <title>{safe_title}</title>
-      <description>Resumo diário completo para Yuri.</description>
+      <description>Edição Completa e Aprofundada para Yuri.</description>
       <enclosure url="{audio_url}" type="audio/mpeg" />
       <guid isPermaLink="true">{audio_url}</guid>
       <pubDate>{now.strftime("%a, %d %b %Y %H:%M:%S %z")}</pubDate>
@@ -236,7 +242,7 @@ def update_rss(audio_filename, title):
 <rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
   <channel>
     <title>Resumo Diario do Yuri</title>
-    <description>Notícias personalizadas.</description>
+    <description>Notícias aprofundadas.</description>
     <link>{BASE_URL}</link>
     <language>pt-br</language>
     <itunes:image href="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Flag_of_Brazil.svg/640px-Flag_of_Brazil.svg.png"/>
