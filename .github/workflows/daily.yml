@@ -1,7 +1,9 @@
 name: Podcast Diario
 on:
   schedule:
-    - cron: '0 10 * * *' # Roda às 10:00 UTC (07:00 Brasil)
+    # 09:50 UTC equivale a 06:50 no Horário de Brasília
+    # Isso dá 10 minutos para o robô processar e estar pronto às 07:00
+    - cron: '50 09 * * *'
   workflow_dispatch: # Permite rodar manualmente
 
 jobs:
@@ -13,7 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0 # Baixa histórico completo
+          fetch-depth: 0
 
       - name: Update Code Base
         run: git pull origin main || echo "Nada para puxar"
@@ -21,7 +23,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11' # Versão moderna
+          python-version: '3.11'
 
       - name: Install dependencies
         run: pip install --upgrade -r requirements.txt
@@ -37,5 +39,4 @@ jobs:
           git config --global user.email 'bot@noreply.github.com'
           git add .
           git commit -m "Novo episódio diário" || exit 0
-          # O segredo: -f obriga a atualização, evitando erros de conflito
           git push -f origin main
