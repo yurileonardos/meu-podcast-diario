@@ -8,11 +8,11 @@
     <itunes:image href="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Flag_of_Brazil.svg/640px-Flag_of_Brazil.svg.png"/>
 
     <item>
-      <title>Resumo 01/05</title>
+      <title>Resumo 02/05</title>
       <description>Edição Completa para Yuri (Fontes Novas).</description>
-      <enclosure url="https://yurileonardos.github.io/meu-podcast-diario/podcast_20260501.mp3" type="audio/mpeg" />
-      <guid isPermaLink="true">https://yurileonardos.github.io/meu-podcast-diario/podcast_20260501.mp3</guid>
-      <pubDate>Fri, 01 May 2026 08:00:57 -0300</pubDate>
+      <enclosure url="https://yurileonardos.github.io/meu-podcast-diario/podcast_20260502.mp3" type="audio/mpeg" />
+      <guid isPermaLink="true">https://yurileonardos.github.io/meu-podcast-diario/podcast_20260502.mp3</guid>
+      <pubDate>Sat, 02 May 2026 07:39:07 -0300</pubDate>
     </item>
     
   </channel>
